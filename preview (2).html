@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>QUIZ HR ONBOARDING MAD6</title>
+<style>
+body{font-family:Arial,sans-serif;max-width:1100px;margin:auto;padding:20px;background:#f5f7fa}
+.header{text-align:center}.logo{max-width:220px}.peccy{max-width:120px}
+.hidden{display:none}.q{background:#fff;padding:12px;margin:12px 0;border-radius:8px;border:1px solid #ddd}
+button{padding:10px 16px}.progress{height:12px;background:#ddd;border-radius:10px;overflow:hidden}
+.bar{height:12px;width:0;background:#4caf50}
+</style>
+</head>
+<body>
+<div class="header">
+<img src="logo.png" class="logo"><br>
+<img src="peccy.png" class="peccy">
+<h1>QUIZ HR ONBOARDING MAD6</h1>
+</div>
+
+<div id="login">
+<p>Contraseña:</p><input id="pwd" type="password">
+<p>Login Amazon:</p><input id="amazon">
+<br><br><button onclick="startQuiz()">Comenzar</button>
+</div>
+
+<div id="quiz" class="hidden">
+<div class="progress"><div id="bar" class="bar"></div></div>
+<h3 id="timer">05:00</h3>
+<form id="form"></form>
+<button type="button" onclick="finishQuiz()">Finalizar</button>
+</div>
+
+<div id="result" class="hidden"></div>
+
+<script>
+const SCRIPT_URL="https://script.google.com/macros/s/AKfycbwQMO609yDj48eZGbzP2lhqMMT5NCHfHyijBmx5EvgRUu9mTltfDwt6GwVlCTuhoKcF/exec";
+const PASS="MAD6HR2026";
+const questions=[
+{q:"¿Qué debo hacer si me surge un imprevisto y no puedo acudir a trabajar?",a:["Avisar a un compañero","Abrir caso en AtoZ, llamar a la línea telefónica o mandar mail","WhatsApp al manager","No avisar"],c:1},
+{q:"¿En qué sección de AtoZ debes entrar para reportar una ausencia?",a:["Nómina","Tiempo libre y permisos","Mi perfil","Beneficios"],c:1},
+{q:"¿Dónde debes adjuntar los justificantes de tu ausencia?",a:["Manager","Correo postal","En el caso creado en AtoZ","Recepción"],c:2},
+{q:"¿Las ausencias por seguro privado son retribuidas?",a:["Sí","Sí con autorización","No","Sí como permiso"],c:2},
+{q:"¿Cuántos Golden Days tienes?",a:["3","5","2","1"],c:1},
+{q:"¿Cuántos días por matrimonio?",a:["5","10","15","20"],c:2},
+{q:"Horario línea HRS",a:["9-18","Turno","24h","7-22"],c:3},
+{q:"¿Dónde firmas documentación?",a:["HR","MyDocs-AtoZ","Milena"],c:1},
+{q:"¿Dónde consultar nómina?",a:["AtoZ","MyHR","Milena","MyDocs"],c:2},
+{q:"¿Dónde consultar Employee ID?",a:["Milena","AtoZ perfil","Contrato","Correo"],c:1},
+{q:"Contraseña inicial Milena",a:["Nº empleado","DNI letra mayúscula","Amazon2024","Fecha nacimiento"],c:1},
+{q:"Vacaciones anuales",a:["22 días y mover 5","30 y mover 10","22 y ninguna","25 y mover 3"],c:0},
+{q:"¿Qué es un Swap Diario?",a:["Cambio permanente","Cambio trabajo/libre misma semana","Intercambio vacaciones","Día libre extra"],c:1},
+{q:"¿Cómo solicitar Swap semanal?",a:["AtoZ","Código QR","Manager","MyHR"],c:1},
+{q:"Canales protocolo acoso",a:["AtoZ","Correos específicos","Manager","MyHR"],c:1},
+{q:"¿Cómo contactar con MyHR?",a:["WhatsApp","Caso en AtoZ","Manager","Email"],c:1},
+{q:"Velocidad permitida en parking MAD6",a:["20","25","15","30"],c:2},
+{q:"Uso correcto del badge",a:["Usar el de un compañero","Personalizarlo","Visible y fichar con él","Trabajar sin badge"],c:2},
+{q:"Uso correcto de taquillas",a:["Compartidas","Amazon responde objetos","Uso individual","Manager ayuda combinación"],c:2},
+{q:"Artículo permitido acceder al centro",a:["Mochila opaca","Móvil registrado, botella agua y mochila transparente","Tablet y auriculares","Cualquiera"],c:1},
+{q:"Objeto prohibido introducir",a:["Botella y cuaderno","Móvil y auriculares","Cámara, alcohol, tabaco y mechero","Bolígrafo"],c:2},
+{q:"Uso correcto del móvil",a:["Escuchar música","Mensajes","Registrado y emergencias autorizadas","Ver hora"],c:2},
+{q:"¿Cómo registrar asistencia?",a:["Solo AtoZ","Fichar entrada y salida con badge","Informar responsable","Firmar hoja"],c:1},
+{q:"¿Qué NO aparece en AtoZ?",a:["Nómina","Mis fichajes","Información personal","Historial médico de otros empleados"],c:3},
+{q:"¿Qué recursos de apoyo psicológico tienes?",a:["EAP y trabajador social","Solo EAP","Solo trabajador social","Ninguno"],c:0}
+];
+
+let time=300,timer,current=[];
+function shuffle(a){return [...a].sort(()=>Math.random()-0.5);}
+
+async function startQuiz(){
+if(document.getElementById('pwd').value!==PASS){alert('Contraseña incorrecta');return;}
+const login=document.getElementById('amazon').value.trim();
+if(!login){alert('Introduce Login');return;}
+try{
+ const r=await fetch(SCRIPT_URL+'?login='+encodeURIComponent(login));
+ const d=await r.json();
+ if(d.exists){alert('Este login ya realizó el quiz');return;}
+}catch(e){}
+document.getElementById('login').classList.add('hidden');
+document.getElementById('quiz').classList.remove('hidden');
+current=shuffle(questions);
+const f=document.getElementById('form');
+current.forEach((q,i)=>{
+ let h=`<div class=q><b>${i+1}. ${q.q}</b><br>`;
+ q.a.forEach((o,j)=>h+=`<label><input type=radio name=q${i} value=${j}> ${o}</label><br>`);
+ h+='</div>'; f.innerHTML+=h;
+});
+timer=setInterval(()=>{
+time--; document.getElementById('timer').textContent=`${String(Math.floor(time/60)).padStart(2,'0')}:${String(time%60).padStart(2,'0')}`;
+document.getElementById('bar').style.width=((300-time)/300*100)+'%';
+if(time<=0) finishQuiz();
+},1000);
+}
+
+function finishQuiz(){
+clearInterval(timer);
+let score=0;
+current.forEach((q,i)=>{
+const s=document.querySelector(`input[name=q${i}]:checked`);
+if(s && Number(s.value)===q.c) score++;
+});
+const pct=(score/current.length*100).toFixed(1);
+const estado=pct>=80?'APROBADO':'NO APROBADO';
+document.getElementById('quiz').classList.add('hidden');
+document.getElementById('result').classList.remove('hidden');
+document.getElementById('result').innerHTML=`<h2>${estado}</h2><h3>${score}/${current.length} (${pct}%)</h3>`;
+fetch(SCRIPT_URL,{method:'POST',body:JSON.stringify({login:amazon.value,nota:score+'/'+current.length,porcentaje:pct,estado:estado,tiempo:(300-time)+' segundos'})});
+}
+</script>
+</body>
+</html>
